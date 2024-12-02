@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Загрузка изображений</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        h2 {
+            color: #555;
+            text-align: center;
+        }
+
+      
+        #upload-form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            width: 100%;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #images {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #images img {
+            margin: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 200px;
+            max-height: 200px;
+        }
+
+        .image-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px;
+        }
+
+        .image-container p {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Загрузите изображение</h1>
+    <form id="upload-form">
+        <input type="file" id="file-input" accept="image/*" required />
+        <button type="submit">Загрузить</button>
+    </form>
+
+    <h2>Загруженные изображения</h2>
+    <div id="images"></div>
+
+    <script>
+        // Получение формы и элемента для отображения изображений
+        const form = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file-input');
+        const imagesDiv = document.getElementById('images');
+
+        // API URL
+        const apiUrl = 'https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/upload'; // Замените на URL вашего API
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onloadend = async () => {
+                const base64Image = reader.result.split(',')[1]; // Извлекаем base64-строку
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        imageBase64: base64Image,
+                        fileName: file.name
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Изображение загружено!');
+                    // Отображаем загруженное изображение
+                    const img = document.createElement('img');
+                    img.src = data.location; // URL изображения
+                    const imageContainer = document.createElement('div');
+                    imageContainer.classList.add('image-container');
+                    const imgDescription = document.createElement('p');
+                    imgDescription.textContent = file.name;
+                    imageContainer.appendChild(img);
+                    imageContainer.appendChild(imgDescription);
+                    imagesDiv.appendChild(imageContainer);
+                } else {
+                    alert('Ошибка загрузки: ' + data.message);
+                }
+            };
+
+            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
+</html>
+
+
